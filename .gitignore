@@ -1,0 +1,7 @@
+/venv/
+/recData/movieLens25m_201912/
+/.idea/
+__pycache__/
+*.txt
+*.csv
+*.pyc

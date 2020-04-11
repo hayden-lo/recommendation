@@ -3,7 +3,7 @@
 # Created Date: Sep 5th 2019
 # Description: Main function for latent factor model recommendation
 
-from rec_lfm.mode_lfm import LFM
+from rec_lfm.model_lfm import LFM
 from rec_lfm.get_train_data import get_train_data
 from recUtils.readDataUtils import get_movie_info
 
@@ -15,7 +15,7 @@ def train_model(**params):
     :return: Train LFM model, Nothing return
     """
     # Materialize lfm model
-    lfm_model = LFM(**params_dict)
+    lfm_model = LFM(**params)
     # Train and output both user and item vector files
     lfm_model.model_train_process(params["input_file"], params["uv_file"], params["iv_file"])
 
@@ -86,9 +86,10 @@ def rec_analysis(target_user, **params):
 
 if __name__ == '__main__':
     # Run parameters
-    params_dict = {"latent_factor": 50, "alpha": 0.01, "learning_rate": 0.1, "step": 50, "threshold": 4,
-                   "input_file": "../recData/ratings.csv", "uv_file": "vecData/user_vec.txt",
-                   "iv_file": "vecData/item_vec.txt", "movie_info": "../recData/movies.csv", "top_n": 5}
+    params_dict = {"latent_factor": 50, "alpha": 0.01, "learning_rate": 0.01, "step": 10, "threshold": 4,
+                   "input_file": "../recData/movieLens25m_201912/ratings.csv", "uv_file": "vecData/user_vec.txt",
+                   "iv_file": "vecData/item_vec.txt", "movie_info": "../recData/movieLens25m_201912/movies.csv", "top_n": 10}
     # Train lfm model
     train_model(**params_dict)
-    # rec_analysis("609", **params_dict)
+    # Recommend top n
+    rec_analysis("999999", **params_dict)
