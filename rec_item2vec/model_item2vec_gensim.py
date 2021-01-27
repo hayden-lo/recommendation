@@ -10,11 +10,11 @@ class Item2VecGensim:
     def __init__(self, **params):
         self.act_seq_file = params["act_seq_file"]  # action sequence file
         self.act_seq_separator = params["act_seq_separator"]  # action sequence separator
-        self.model_file = params["model_file"]  # output word2vec model file
-        self.vectors_file = params["vectors_file"]  # output vectors file
+        self.gensim_model_file = params["gensim_model_file"]  # gensim output word2vec model file
+        self.gensim_vectors_file = params["gensim_vectors_file"]  # gensim output vectors file
         self.learning_rate = params["learning_rate"]  # learning rate
         self.emb_size = params["emb_size"]  # vector dimension
-        self.window = params["window"]  # window
+        self.window = params["window"]  # slide window
         self.min_count = params["min_count"]  # minimum action number
         self.network_algo = params["network_algo"]  # network algorithm: 0 for CBOW, 1 for skip-gram
         self.speed_algo = params["speed_algo"]  # speed algorithm: 0 for negative sampling, 1 for hierarchical softmax
@@ -41,7 +41,7 @@ class Item2VecGensim:
         :param model: Input gensim word2vec model[object]
         :return: Nothing return
         """
-        model.wv.save_word2vec_format(self.vectors_file)
+        model.wv.save_word2vec_format(self.gensim_vectors_file)
 
     def save_model(self, model):
         """
@@ -49,7 +49,7 @@ class Item2VecGensim:
         :param model: Gensim word2vec model
         :return: Nothing return
         """
-        model.save(self.model_file)
+        model.save(self.gensim_model_file)
 
     def topn_similar(self, model, item_id, topn):
         """
@@ -59,5 +59,5 @@ class Item2VecGensim:
         :param topn:
         :return:
         """
-        recom_list=model.most_similar(item_id, topn=topn)
+        recom_list = model.most_similar(item_id, topn=topn)
         return recom_list

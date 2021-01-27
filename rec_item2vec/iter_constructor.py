@@ -3,6 +3,7 @@
 # Created Date: Apr 9th 2020
 # Description: Iterator constructor for item2vec
 
+import os
 
 class IterConstructor:
     def __init__(self, dirname):
