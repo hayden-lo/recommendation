@@ -19,24 +19,23 @@ def run(param_dict):
     test_db = tf.data.TextLineDataset(test_file).map(partial(parse_data, param_dict=param_dict)).batch(
         param_dict["batch_size"])
     dssm_model = DSSM(param_dict)
-    print(dssm_model)
     dssm_model.compile(optimizer=get_optimizer(param_dict["optimizer"], learning_rate=param_dict["learning_rate"]),
                        loss=get_loss_fun(param_dict["loss_fun"]),
                        metrics=get_metrics(param_dict["metrics"]))
     print("====================Model Training====================")
     dssm_model.fit(train_db, epochs=param_dict["epoch_num"])
-    print(dssm_model.item_out)
     print("====================Model Evaluating====================")
-    # dssm_model.evaluate(test_db)
+    dssm_model.evaluate(test_db)
     # save model
-    user_embedding_model = tf.keras.models.Model(inputs=dssm_model.user_inputs,outputs=dssm_model.user_out)
-    # item_embedding_model = tf.keras.models.Model(inputs=dssm_model.item_inputs, outputs=dssm_model.item_out)
-    # user_embedding_model.save(user_embedding_model, param_dict["model_dir"])
-    # item_embedding_model.save(item_embedding_model, param_dict["model_dir"])
-    # dssm_model.save(param_dict["model_dir"])
+    # dssm_model.save(filepath=param_dict["model_dir"],save_format="tf")
     # test
-    user_inputs = {"user_inputs": ["12","610"]}
-    dssm_model(user_inputs)
+    print("====================Model Predicting====================")
+    inputs = {"user_inputs": np.array([["12", "610"] + ["padding_value"] * 28]),
+              "item_inputs": np.array([["34"] + ["padding_value"] * 33])}
+    outputs = dssm_model.predict(inputs)
+    for k, v in outputs:
+        print("*" * 15 + k + "*" * 15)
+        print(v)
 
 
 if __name__ == '__main__':
