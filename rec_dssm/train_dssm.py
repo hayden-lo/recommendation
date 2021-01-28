@@ -20,26 +20,33 @@ def run(param_dict):
         param_dict["batch_size"])
     dssm_model = DSSM(param_dict)
     dssm_model.compile(optimizer=get_optimizer(param_dict["optimizer"], learning_rate=param_dict["learning_rate"]),
-                       loss=get_loss_fun(param_dict["loss_fun"]),
-                       metrics=get_metrics(param_dict["metrics"]))
+                       loss={"predictions": get_loss_fun(param_dict["loss_fun"])},
+                       metrics={"predictions": get_metrics(param_dict["metrics"])})
     print("====================Model Training====================")
     dssm_model.fit(train_db, epochs=param_dict["epoch_num"])
     print("====================Model Evaluating====================")
     dssm_model.evaluate(test_db)
     # save model
-    # dssm_model.save(filepath=param_dict["model_dir"],save_format="tf")
+    dssm_model.save(filepath=param_dict["model_dir"], overwrite=True, save_format="tf")
     # test
     print("====================Model Predicting====================")
-    inputs = {"user_inputs": np.array([["12", "610"] + ["padding_value"] * 28]),
-              "item_inputs": np.array([["34"] + ["padding_value"] * 33])}
+    inputs = {"user_inputs": np.array([['click_seq_2492', 'click_seq_2012', 'click_seq_2478', 'click_seq_553',
+                                        'click_seq_157', 'click_seq_3053', 'click_seq_1298', 'click_seq_3448',
+                                        'click_seq_151', 'click_seq_1090', 'click_seq_1224', 'click_seq_5060',
+                                        'click_seq_527', 'click_seq_3147', 'click_seq_2353', 'click_seq_47',
+                                        'click_seq_593', 'click_seq_3033', 'click_seq_1206', 'click_seq_3702',
+                                        'click_seq_1240', 'click_seq_1270', 'click_seq_2291', 'click_seq_163',
+                                        'click_seq_1226', 'click_seq_943', 'click_seq_1265', 'click_seq_3273',
+                                        'click_seq_1625', 'click_seq_1092']
+                                       ]),
+              "item_inputs": np.array([["movieId_157", "screen_year_7", "rating_counts_4", "rating_mean_2",
+                                        "genres_Comedy", "genres_War"] + ["padding_value"] * 28])}
     outputs = dssm_model.predict(inputs)
-    for k, v in outputs:
-        print("*" * 15 + k + "*" * 15)
-        print(v)
+    print(outputs["predictions"])
 
 
 if __name__ == '__main__':
-    param_dict = {"model_dir": "model_dir",
+    param_dict = {"model_dir": "./model_dir",
                   "data_dir": "../recData/movieLens1m_201809",
                   "data_file": "data.csv",
                   "train_file": "train.csv",
