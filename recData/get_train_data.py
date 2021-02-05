@@ -92,7 +92,8 @@ if __name__ == '__main__':
     target_file = "movieLens1m_201809/data.csv"
     threshold = 4
     max_seq_num = 30
-    columns = ["userId", "movieId", "label", "screen_year", "rating_counts", "rating_mean", "genres", "click_seq"]
+    columns = ["userId", "movieId", "label", "rating", "screen_year", "rating_counts", "rating_mean", "genres",
+               "click_seq"]
     clean_df = get_clean_df(movie_file, rating_file, threshold, max_seq_num)[columns]
     # pd.set_option("display.max_columns",100)
     # print(clean_df.head())

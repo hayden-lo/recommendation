@@ -13,7 +13,7 @@ class WideDeep(tf.keras.models.Model):
         self.batch_size = param_dict["batch_size"]
         self.act_fun = param_dict["act_fun"]
         self.reg_fun = param_dict["reg_fun"]
-        self.sample_weight = param_dict["sample_weight"]
+        self.is_reweight = param_dict["is_reweight"]
         self.from_logits = param_dict["from_logits"]
         self.vocab_layer = VocabLayer(self.vocab_list)
         self.wide_embedding_layer = EmbeddingLayer(feature_size=self.feature_size, emb_size=1)
@@ -45,13 +45,18 @@ class WideDeep(tf.keras.models.Model):
         return self.outputs
 
     def train_step(self, data):
-        x, y_true = data
+        sample_weight = None
+        if (len(data) == 3 and self.is_reweight):
+            self.is_reweight = True
+            x, y_true, sample_weight = data
+        else:
+            x, y_true = data
         with tf.GradientTape() as tape:
             y_pred = self.call(inputs=x, training=True)
             bce_loss = tf.losses.binary_crossentropy(y_true, y_pred, from_logits=self.from_logits)
-            reweight_loss = -(self.sample_weight - 1) * y_true * tf.math.sigmoid(y_pred)
-            loss = bce_loss + reweight_loss
-            loss = tf.reduce_mean(loss)
+            if self.is_reweight:
+                bce_loss *= sample_weight
+            loss = tf.reduce_mean(bce_loss)
         gradients = tape.gradient(loss, self.trainable_variables)
         self.optimizer.apply_gradients(zip(gradients, self.trainable_variables))
         self.compiled_metrics.update_state(y_true, y_pred)

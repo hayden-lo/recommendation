@@ -57,4 +57,7 @@ def parse_data(row, param_dict):
     cat_inputs = tf.concat(list(cat_dict.values()), axis=0)
     seq_inputs = tf.concat(list(seq_dict.values()), axis=0)
     features = {"tgt_inputs": tgt_inputs, "cat_inputs": cat_inputs, "seq_inputs": seq_inputs}
-    return features, col2val["label"]
+    if param_dict["is_reweight"]:
+        return features, col2val["label"], col2val[param_dict["sample_weight"]]
+    else:
+        return features, col2val["label"]
