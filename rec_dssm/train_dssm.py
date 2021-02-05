@@ -1,6 +1,6 @@
 import numpy as np
 from functools import partial
-from rec_dssm.preprocessing import *
+from recData.preprocessing import *
 from rec_dssm.model_dssm import *
 from recUtils.tf_utils import *
 
@@ -54,6 +54,7 @@ if __name__ == '__main__':
                   "reg_fun": "l2",
                   "batch_size": 128,
                   "emb_size": 128,
+                  "is_reweight": False,
                   "learning_rate": 0.01,
                   "optimizer": "adam",
                   "loss_fun": "binary_cross_entropy",
@@ -63,16 +64,19 @@ if __name__ == '__main__':
     run(param_dict)
     print("====================Model Predicting====================")
     dssm_model = tf.keras.models.load_model(param_dict["model_dir"])
-    inputs = {"user_inputs": np.array([['click_seq_2492', 'click_seq_2012', 'click_seq_2478', 'click_seq_553',
-                                        'click_seq_157', 'click_seq_3053', 'click_seq_1298', 'click_seq_3448',
-                                        'click_seq_151', 'click_seq_1090', 'click_seq_1224', 'click_seq_5060',
-                                        'click_seq_527', 'click_seq_3147', 'click_seq_2353', 'click_seq_47',
-                                        'click_seq_593', 'click_seq_3033', 'click_seq_1206', 'click_seq_3702',
-                                        'click_seq_1240', 'click_seq_1270', 'click_seq_2291', 'click_seq_163',
-                                        'click_seq_1226', 'click_seq_943', 'click_seq_1265', 'click_seq_3273',
-                                        'click_seq_1625', 'click_seq_1092']]),
-              "item_inputs": np.array([["movieId_157", "screen_year_7", "rating_counts_4", "rating_mean_2",
-                                        "genres_Comedy", "genres_War"] + ["padding_value"] * 3])}
+    inputs = {"movieId": np.array([["click_seq_157"]]),
+              "screen_year": np.array([["screen_year_7"]]),
+              "rating_counts": np.array([["rating_counts_4"]]),
+              "rating_mean": np.array([["rating_mean_2"]]),
+              "click_seq": np.array([["click_seq_2492", "click_seq_2012", "click_seq_2478", "click_seq_553",
+                                      "click_seq_157", "click_seq_3053", "click_seq_1298", "click_seq_3448",
+                                      "click_seq_151", "click_seq_1090", "click_seq_1224", "click_seq_5060",
+                                      "click_seq_527", "click_seq_3147", "click_seq_2353", "click_seq_47",
+                                      "click_seq_593", "click_seq_3033", "click_seq_1206", "click_seq_3702",
+                                      "click_seq_1240", "click_seq_1270", "click_seq_2291", "click_seq_163",
+                                      "click_seq_1226", "click_seq_943", "click_seq_1265", "click_seq_3273",
+                                      "click_seq_1625", "click_seq_1092"]]),
+              "genres": np.array([["genres_Comedy", "genres_War"] + ["padding_value"] * 3])}
     outputs = dssm_model.predict(inputs)
     print(outputs["predictions"])
     print("====================User Embedding====================")

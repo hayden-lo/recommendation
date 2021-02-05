@@ -24,8 +24,7 @@ class WideDeep(tf.keras.models.Model):
         self.out_layer = tf.keras.layers.Activation(activation=tf.keras.activations.sigmoid)
 
     def call(self, inputs, training=None, mask=None):
-        tgt_inputs, cat_inputs, seq_inputs = list(inputs.values())
-        all_inputs = tf.concat([tgt_inputs, cat_inputs, seq_inputs], axis=1)
+        all_inputs = tf.concat(list(inputs.values()), axis=1)
         # vocab layer
         self.vocab = self.vocab_layer(all_inputs)
         # wide
@@ -46,12 +45,12 @@ class WideDeep(tf.keras.models.Model):
 
     def train_step(self, data):
         sample_weight = None
-        if (len(data) == 3 and self.is_reweight):
-            self.is_reweight = True
+        if len(data) == 3 and self.is_reweight:
             x, y_true, sample_weight = data
         else:
             x, y_true = data
         with tf.GradientTape() as tape:
+            print([i.shape for i in list(x.values())])
             y_pred = self.call(inputs=x, training=True)
             bce_loss = tf.losses.binary_crossentropy(y_true, y_pred, from_logits=self.from_logits)
             if self.is_reweight:

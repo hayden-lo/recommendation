@@ -17,8 +17,7 @@ class FM(tf.keras.models.Model):
         self.out_layer = tf.keras.layers.Activation(activation=tf.keras.activations.sigmoid)
 
     def call(self, inputs, training=None, mask=None):
-        tgt_inputs, cat_inputs, seq_inputs = list(inputs.values())
-        all_inputs = tf.concat([tgt_inputs, cat_inputs, seq_inputs], axis=1)
+        all_inputs = tf.concat(list(inputs.values()), axis=1)
         # vocab layer
         self.vocab = self.vocab_layer(all_inputs)
         # global bias

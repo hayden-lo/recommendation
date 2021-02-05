@@ -52,11 +52,11 @@ def parse_data(row, param_dict):
         seq_val = tf.strings.join([seq, seq_val], "_")
         seq_dict[seq] = tf.pad(seq_val, [[0, max_seq_num - tf.shape(seq_val)[0]]],
                                constant_values=param_dict["padding_value"])
-    feat_dict = {**tgt_dict, **cat_dict, **seq_dict}
-    tgt_inputs = feat_dict["movieId"]
-    cat_inputs = tf.concat(list(cat_dict.values()), axis=0)
-    seq_inputs = tf.concat(list(seq_dict.values()), axis=0)
-    features = {"tgt_inputs": tgt_inputs, "cat_inputs": cat_inputs, "seq_inputs": seq_inputs}
+    features = {**tgt_dict, **cat_dict, **seq_dict}
+    # tgt_inputs = feat_dict["movieId"]
+    # cat_inputs = tf.concat(list(cat_dict.values()), axis=0)
+    # seq_inputs = tf.concat(list(seq_dict.values()), axis=0)
+    # features = {"tgt_inputs": tgt_inputs, "cat_inputs": cat_inputs, "seq_inputs": seq_inputs}
     if param_dict["is_reweight"]:
         return features, col2val["label"], col2val[param_dict["sample_weight"]]
     else:
