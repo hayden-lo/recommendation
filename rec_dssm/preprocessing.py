@@ -47,10 +47,10 @@ def parse_data(row, param_dict):
     cat_dict = {cat: tf.expand_dims(cat + "_" + col2val[cat], axis=0) for cat in param_dict["cat_columns"]}
     # sequence features
     seq_dict = defaultdict(list)
-    for seq in param_dict["seq_columns"]:
-        seq_val = tf.strings.split([col2val[seq]], "|").values[:param_dict["max_seq_num"]]
+    for seq, max_seq_num in param_dict["seq_columns"].items():
+        seq_val = tf.strings.split([col2val[seq]], "|").values[:max_seq_num]
         seq_val = tf.strings.join([seq, seq_val], "_")
-        seq_dict[seq] = tf.pad(seq_val, [[0, param_dict["max_seq_num"] - tf.shape(seq_val)[0]]],
+        seq_dict[seq] = tf.pad(seq_val, [[0, max_seq_num - tf.shape(seq_val)[0]]],
                                constant_values=param_dict["padding_value"])
     feat_dict = {**tgt_dict, **cat_dict, **seq_dict}
     user_inputs = tf.concat([feat_dict[feat] for feat in param_dict["user_features"]], axis=0)

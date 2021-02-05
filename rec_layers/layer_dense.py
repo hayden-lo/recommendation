@@ -1,4 +1,5 @@
 import tensorflow as tf
+from recUtils.tf_utils import *
 
 
 class DenseLayer(tf.keras.layers.Layer):
@@ -7,7 +8,7 @@ class DenseLayer(tf.keras.layers.Layer):
         # hyper parameters
         self.output_size = output_size
         self.act_fun = act_fun
-        self.reg_fun = reg_fun
+        self.reg_fun = get_reg_fun(reg_fun)
         self.use_bn = use_bn
         self.dropout_rate = dropout_rate
 
@@ -15,12 +16,12 @@ class DenseLayer(tf.keras.layers.Layer):
         # initialize layers
         self.kernels = self.add_weight(name="weights",
                                        shape=[input_shape[-1], self.output_size],
-                                       initializer=tf.keras.initializers.GlorotNormal,
+                                       initializer=tf.keras.initializers.GlorotNormal(),
                                        regularizer=self.reg_fun,
                                        trainable=True)
         self.bias = self.add_weight(name="bias",
                                     shape=[self.output_size],
-                                    initializer=tf.keras.initializers.GlorotNormal,
+                                    initializer=tf.keras.initializers.GlorotNormal(),
                                     regularizer=self.reg_fun,
                                     trainable=True)
         if self.use_bn:
@@ -38,6 +39,6 @@ class DenseLayer(tf.keras.layers.Layer):
 
     def get_config(self):
         config = super().get_config()
-        config.update({"input_size": self.input_size, "output_size": self.output_size, "act_fun": self.act_fun,
+        config.update({"output_size": self.output_size, "act_fun": self.act_fun, "reg_fun": self.reg_fun,
                        "use_bn": self.use_bn, "dropout_rate": self.dropout_rate})
         return config

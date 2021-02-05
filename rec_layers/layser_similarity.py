@@ -20,3 +20,4 @@ class CosineSimilarityLayer(tf.keras.layers.Layer):
     def get_config(self):
         config = super().get_config()
         config.update({"axis": self.axis})
+        return config
