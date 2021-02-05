@@ -1,8 +1,9 @@
 /venv/
 /recData/movieLens25m_201912/
 /.idea/
+/.gitignore
 __pycache__/
+model_dir/
 *.txt
 *.csv
 *.pyc
-/model_dir/
