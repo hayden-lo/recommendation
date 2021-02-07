@@ -1,4 +1,7 @@
-from rec_layers.layer_dense import *
+from rec_layers.layer_vocab import *
+from rec_layers.layer_embedding import *
+from rec_layers.layer_attention import *
+from rec_layers.layer_mlp import *
 
 
 class DIN(tf.keras.models.Model):
@@ -7,15 +10,40 @@ class DIN(tf.keras.models.Model):
         self.feature_size = param_dict["feature_size"]
         self.emb_size = param_dict["emb_size"]
         self.vocab_list = param_dict["vocab_list"]
-        self.batch_size = param_dict["batch_size"]
+        self.act_fun = param_dict["act_fun"]
+        self.reg_fun = param_dict["reg_fun"]
+        self.hidden_units = param_dict["hidden_units"]
+        self.padding_value = param_dict["padding_value"]
+        self.vocab_layer = VocabLayer(self.vocab_list)
+        self.embedding_layer = EmbeddingLayer(feature_size=self.feature_size, emb_size=self.emb_size)
+        self.attention_layer = AttentionLayer(param_dict)
+        self.mlp_layer = MLPLayer(hidden_units=self.hidden_units, act_fun=self.act_fun, reg_fun=self.reg_fun)
+        self.out_layer = tf.keras.layers.Activation(activation=tf.keras.activations.sigmoid)
 
     def call(self, inputs, training=None, mask=None):
-        all_inputs = tf.concat(list(inputs.values()), axis=1)
+        query_inputs = inputs["movieId"]
+        keys_inputs = inputs["click_seq"]
+        normal_inputs = tf.concat([v for k, v in inputs.items() if k not in ["movieId", "click_seq"]], axis=1)
         # vocab layer
-        self.vocab = self.vocab_layer(all_inputs)
+        self.query_vocab = self.vocab_layer(query_inputs)
+        self.keys_vocab = self.vocab_layer(keys_inputs)
+        self.normal_vocab = self.vocab_layer(normal_inputs)
+        # embedding layer
+        self.query_embedding = self.embedding_layer(self.query_vocab)
+        self.keys_embedding = self.embedding_layer(self.keys_vocab)
+        self.normal_embedding = self.embedding_layer(self.normal_vocab)
+        # attention layer
+        self.keys_mask = tf.not_equal(keys_inputs, self.padding_value)
+        self.attention_out = self.attention_layer((self.query_embedding, self.keys_embedding, self.keys_mask))
+        # mlp layer
+        self.mlp_inputs = tf.concat([self.query_embedding, self.attention_out, self.normal_embedding], axis=1)
+        self.mlp_out = self.mlp_layer(self.mlp_inputs)
+        self.outputs = self.out_layer(self.mlp_out)
+        return self.outputs
 
     def get_config(self):
         config = super().get_config()
         config.update({"feature_size": self.feature_size, "emb_size": self.emb_size, "vocab_list": self.vocab_list,
-                       "batch_size": self.batch_size})
+                       "act_fun": self.act_fun, "reg_fun": self.reg_fun, "hidden_units": self.hidden_units,
+                       "padding_value": self.padding_value})
         return config

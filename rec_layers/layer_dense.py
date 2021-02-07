@@ -7,8 +7,8 @@ class DenseLayer(tf.keras.layers.Layer):
         super().__init__(**kwargs)
         # hyper parameters
         self.output_size = output_size
-        self.act_fun = act_fun
-        self.reg_fun = get_reg_fun(reg_fun)
+        self.act_fun = get_act_fun(act_fun, **kwargs)
+        self.reg_fun = get_reg_fun(reg_fun, **kwargs)
         self.use_bn = use_bn
         self.dropout_rate = dropout_rate
 

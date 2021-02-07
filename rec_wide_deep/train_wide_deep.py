@@ -46,6 +46,7 @@ if __name__ == "__main__":
                   "reg_fun": "l2",
                   "batch_size": 128,
                   "emb_size": 128,
+                  "hidden_units": [64, 32, 1],
                   "learning_rate": 0.001,
                   "optimizer": "adam",
                   "is_reweight": True,

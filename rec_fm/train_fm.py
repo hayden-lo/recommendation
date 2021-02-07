@@ -47,7 +47,6 @@ if __name__ == "__main__":
                   "learning_rate": 0.001,
                   "optimizer": "adam",
                   "loss_fun": "binary_cross_entropy",
-                  "is_reweight": False,
                   "from_logits": False,
                   "metrics": ["auc"],
                   "epoch_num": 1}

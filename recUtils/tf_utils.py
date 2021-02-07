@@ -10,7 +10,7 @@ def get_optimizer(alias, learning_rate, **kwargs):
         return tf.optimizers.Nadam(learning_rate=learning_rate, **kwargs)
 
 
-def get_loss_fun(alias, from_logits=True, **kwargs):
+def get_loss_fun(alias, **kwargs):
     if str.lower(alias) == "binary_cross_entropy":
         return tf.losses.BinaryCrossentropy(**kwargs)
     if str.lower(alias) == "categorical_cross_entropy":
@@ -34,9 +34,10 @@ def get_metrics(aliases, **kwargs):
 
 
 def get_act_fun(alias, **kwargs):
+    if alias == None:
+        return None
     if str.lower(alias) == "relu":
         return tf.nn.relu
-    tf.keras.layers.Activation()
 
 
 def get_reg_fun(alias, **kwargs):

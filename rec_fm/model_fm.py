@@ -10,7 +10,6 @@ class FM(tf.keras.models.Model):
         self.feature_size = param_dict["feature_size"]
         self.factor_dim = param_dict["factor_dim"]
         self.vocab_list = param_dict["vocab_list"]
-        self.batch_size = param_dict["batch_size"]
         self.vocab_layer = VocabLayer(self.vocab_list)
         self.embedding_layer1 = EmbeddingLayer(feature_size=self.feature_size, emb_size=1)
         self.embedding_layer2 = EmbeddingLayer(feature_size=self.feature_size, emb_size=self.factor_dim)
@@ -38,6 +37,6 @@ class FM(tf.keras.models.Model):
 
     def get_config(self):
         config = super().get_config()
-        config.update({"feature_size": self.feature_size, "factor_dim": self.factor_dim, "vocab_list": self.vocab_list,
-                       "batch_size": self.batch_size})
+        config.update({"feature_size": self.feature_size, "factor_dim": self.factor_dim,
+                       "vocab_list": self.vocab_list, })
         return config
