@@ -1,4 +1,3 @@
-import tensorflow as tf
 from recUtils.tf_utils import *
 
 

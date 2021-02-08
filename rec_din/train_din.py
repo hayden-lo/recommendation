@@ -16,7 +16,8 @@ def run(param_dict):
         param_dict["batch_size"])
     din_model = DIN(param_dict)
     din_model.compile(optimizer=get_optimizer(param_dict["optimizer"], learning_rate=param_dict["learning_rate"]),
-                            metrics=get_metrics(param_dict["metrics"]))
+                      loss=get_loss_fun(param_dict["loss_fun"], from_logits=param_dict["from_logits"]),
+                      metrics=get_metrics(param_dict["metrics"]))
     print("====================Model Training====================")
     din_model.fit(train_db, epochs=param_dict["epoch_num"])
     print("====================Model Evaluating====================")
@@ -47,6 +48,7 @@ if __name__ == "__main__":
                   "emb_size": 128,
                   "learning_rate": 0.001,
                   "optimizer": "adam",
+                  "loss_fun": "binary_cross_entropy",
                   "from_logits": False,
                   "metrics": ["auc"],
                   "epoch_num": 1}

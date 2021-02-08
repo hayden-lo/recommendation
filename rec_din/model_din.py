@@ -15,7 +15,8 @@ class DIN(tf.keras.models.Model):
         self.hidden_units = param_dict["hidden_units"]
         self.padding_value = param_dict["padding_value"]
         self.vocab_layer = VocabLayer(self.vocab_list)
-        self.embedding_layer = EmbeddingLayer(feature_size=self.feature_size, emb_size=self.emb_size)
+        self.embedding_layer = EmbeddingLayer(feature_size=self.feature_size, emb_size=self.emb_size,
+                                              reg_fun=self.reg_fun)
         self.attention_layer = AttentionLayer(param_dict)
         self.mlp_layer = MLPLayer(hidden_units=self.hidden_units, act_fun=self.act_fun, reg_fun=self.reg_fun)
         self.out_layer = tf.keras.layers.Activation(activation=tf.keras.activations.sigmoid)
@@ -33,10 +34,12 @@ class DIN(tf.keras.models.Model):
         self.keys_embedding = self.embedding_layer(self.keys_vocab)
         self.normal_embedding = self.embedding_layer(self.normal_vocab)
         # attention layer
-        self.keys_mask = tf.not_equal(keys_inputs, self.padding_value)
+        self.keys_mask = tf.expand_dims(tf.not_equal(keys_inputs, self.padding_value), axis=1)
         self.attention_out = self.attention_layer((self.query_embedding, self.keys_embedding, self.keys_mask))
         # mlp layer
-        self.mlp_inputs = tf.concat([self.query_embedding, self.attention_out, self.normal_embedding], axis=1)
+        self.mlp_inputs = tf.concat([self.keys_embedding, self.query_embedding,
+                                     self.attention_out, self.normal_embedding], axis=1)
+        self.mlp_inputs = tf.reshape(self.mlp_inputs, shape=[-1, self.mlp_inputs.shape[1] * self.emb_size])
         self.mlp_out = self.mlp_layer(self.mlp_inputs)
         self.outputs = self.out_layer(self.mlp_out)
         return self.outputs

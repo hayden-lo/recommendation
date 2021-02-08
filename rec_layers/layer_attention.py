@@ -15,10 +15,9 @@ class AttentionLayer(tf.keras.layers.Layer):
         self.query, self.keys, self.keys_mask = inputs
         self.queries = tf.tile(self.query, multiples=[1, tf.shape(self.keys)[1], 1])
         self.attention_mlp_inputs = tf.concat(
-            [self.queries, self.keys, self.queries - self.keys, self.queries * self.keys],
-            axis=-1)
+            [self.queries, self.keys, self.queries - self.keys, self.queries * self.keys],axis=-1)
         self.attention_mlp_outputs = self.mlp_layer(self.attention_mlp_inputs)
-        self.attention_mlp_outputs = tf.reshape(self.attention_mlp_outputs, shape=[-1, 1, tf.shape(self.keys)[1]])
+        self.attention_mlp_outputs = tf.reshape(self.attention_mlp_outputs , shape=[-1, 1, tf.shape(self.keys)[1]])
         self.attention_mlp_outputs = tf.where(self.keys_mask, self.attention_mlp_outputs, self.mask_value)
         self.attention_weights = tf.nn.softmax(self.attention_mlp_outputs, axis=2)
         self.attention_outputs = self.attention_weights @ self.keys

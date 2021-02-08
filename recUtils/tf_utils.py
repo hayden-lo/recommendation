@@ -34,13 +34,15 @@ def get_metrics(aliases, **kwargs):
 
 
 def get_act_fun(alias, **kwargs):
-    if alias == None:
+    if alias is None:
         return None
     if str.lower(alias) == "relu":
         return tf.nn.relu
 
 
 def get_reg_fun(alias, **kwargs):
+    if alias is None:
+        return None
     if str.lower(alias) == "l1":
         return tf.keras.regularizers.L1(**kwargs)
     if str.lower(alias) == "l2":

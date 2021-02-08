@@ -25,5 +25,6 @@ class MLPLayer(tf.keras.layers.Layer):
 
     def get_config(self):
         config = super().get_config()
-        config.update({})
+        config.update({"hidden_units": self.hidden_units, "act_fun": self.act_fun, "reg_fun": self.reg_fun,
+                       "use_bn": self.use_bn, "dropout_rate": self.dropout_rate})
         return config

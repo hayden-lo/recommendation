@@ -1,8 +1,10 @@
-import numpy as np
 from functools import partial
+
+import numpy as np
+
 from recData.preprocessing import *
-from rec_fm.model_fm import *
 from recUtils.tf_utils import *
+from rec_fm.model_fm import *
 
 
 def run(param_dict):

@@ -50,8 +50,9 @@ def parse_data(row, param_dict):
     for seq, max_seq_num in param_dict["seq_columns"].items():
         seq_val = tf.strings.split([col2val[seq]], "|").values[:max_seq_num]
         seq_val = tf.strings.join([seq, seq_val], "_")
-        seq_dict[seq] = tf.pad(seq_val, [[0, max_seq_num - tf.shape(seq_val)[0]]],
-                               constant_values=param_dict["padding_value"])
+        seq_val = tf.pad(seq_val, [[0, max_seq_num - tf.shape(seq_val)[0]]],
+                         constant_values=param_dict["padding_value"])
+        seq_dict[seq] = tf.reshape(seq_val, [max_seq_num])
     features = {**tgt_dict, **cat_dict, **seq_dict}
     if "is_reweight" in param_dict and param_dict["is_reweight"]:
         return features, col2val["label"], col2val[param_dict["sample_weight"]]
