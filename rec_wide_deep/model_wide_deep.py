@@ -1,4 +1,4 @@
-from rec_layers.layer_linear import *
+from rec_layers.layer_embedding import *
 from rec_layers.layer_mlp import *
 from rec_layers.layer_vocab import *
 
@@ -16,7 +16,7 @@ class WideDeep(tf.keras.models.Model):
         self.is_reweight = param_dict["is_reweight"]
         self.from_logits = param_dict["from_logits"]
         self.vocab_layer = VocabLayer(self.vocab_list)
-        self.linear_layer = LinearLayer(feature_size=self.feature_size)
+        self.wide_embedding_layer = EmbeddingLayer(feature_size=self.feature_size, emb_size=1)
         self.deep_embedding_layer = EmbeddingLayer(feature_size=self.feature_size, emb_size=self.emb_size)
         self.deep_mlp_layer = MLPLayer(hidden_units=self.hidden_units, act_fun=self.act_fun, reg_fun=self.reg_fun)
         self.out_layer = tf.keras.layers.Activation(activation=tf.keras.activations.sigmoid)
@@ -26,7 +26,9 @@ class WideDeep(tf.keras.models.Model):
         # vocab layer
         self.vocab = self.vocab_layer(all_inputs)
         # wide
-        self.wide_score = self.linear_layer(self.vocab)
+        self.wide_weights = self.wide_embedding_layer(self.vocab)
+        self.wide_score = tf.squeeze(self.wide_weights, axis=2)
+        self.wide_score = tf.reduce_sum(self.wide_score, axis=1)
         # deep
         self.deep_embedding = self.deep_embedding_layer(self.vocab)
         self.deep_embedding = tf.reshape(self.deep_embedding, shape=[-1, self.input_size * self.emb_size])
@@ -59,5 +61,6 @@ class WideDeep(tf.keras.models.Model):
     def get_config(self):
         config = super().get_config()
         config.update({"feature_size": self.feature_size, "emb_size": self.emb_size, "vocab_list": self.vocab_list,
-                       "act_fun": self.act_fun, "reg_fun": self.reg_fun, "hidden_units": self.hidden_units})
+                       "act_fun": self.act_fun, "reg_fun": self.reg_fun, "hidden_units": self.hidden_units,
+                       "is_reweight":self.is_reweight,"from_logits":self.from_logits})
         return config

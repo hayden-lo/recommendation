@@ -1,7 +1,7 @@
-from rec_layers.layer_vocab import *
-from rec_layers.layer_embedding import *
 from rec_layers.layer_attention import *
+from rec_layers.layer_embedding import *
 from rec_layers.layer_mlp import *
+from rec_layers.layer_vocab import *
 
 
 class DIN(tf.keras.models.Model):
