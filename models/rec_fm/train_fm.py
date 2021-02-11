@@ -1,12 +1,11 @@
-import pandas as pd
 from functools import partial
 from config.configs import *
 from models.rec_fm.model_fm import *
-from utils.get_inputs import *
-from utils.preprocessing import *
 from utils.predict_methods import *
+from utils.preprocessing import *
 
 pd.options.display.max_columns = 100
+pd.options.display.width = 500
 
 
 def run(param_dict):
@@ -31,17 +30,12 @@ def run(param_dict):
     print("====================Model Evaluating====================")
     fm_model.evaluate(test_db)
     # save model
-    print("====================Model Saving====================")
-    start = time.time()
     fm_model.save(filepath=param_dict["model_dir"], overwrite=True, save_format="tf")
-    if param_dict["mode"] == "train":
-        elasped = round((time.time() - start) / 60, 2)
-        print("====================Save Elaspe {} minutes====================".format(elasped))
 
 
 if __name__ == "__main__":
     specific_dict = {"mode": "predict", "factor_dim": 50}
-    train_dict = {"min_hit": 10, "batch_size": 512, "learning_rate": 0.001, "epoch_num": 5,
+    train_dict = {"min_hit": 3000, "batch_size": 512, "learning_rate": 0.001, "epoch_num": 5,
                   "callbacks": [get_early_stop()]}
     predict_params["user_id"] = 999998
     param_dict = {**universal_params, **specific_dict}
@@ -76,4 +70,8 @@ if __name__ == "__main__":
         print("====================Constructing Inputs Elaspe {} seconds====================".format(elasped))
         outputs = fm_model.predict(inputs)
         recom_df = get_recommendations(inputs=inputs, outputs=outputs, param_dict=param_dict)
+        filter1 = (~recom_df["genres"].str.contains("Documentary"))
+        filter2 = (recom_df["screen_year"] >= 2000)
+        filter3 = (recom_df["genres"] != "(no genres listed)")
+        recom_df = recom_df[filter1 & filter2 & filter3]
         print(recom_df.head(20))

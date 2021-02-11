@@ -5,6 +5,10 @@ from collections import defaultdict
 
 
 def get_inputs(user_id, param_dict):
+    inputs_file = os.path.join(param_dict["model_dir"], param_dict["inputs_file"])
+    if os.path.exists(inputs_file):
+        inputs_dict = eval(open(inputs_file, "r").read().strip())
+        return {k: np.array(v) for k, v in inputs_dict.items()}
     inputs = defaultdict(np.ndarray)
     all_data = pd.read_csv(os.path.join(param_dict["data_dir"], param_dict["data_file"]))
     user_data = pd.read_csv(os.path.join(param_dict["data_dir"], param_dict["predict_file"]))
@@ -47,6 +51,8 @@ def get_inputs(user_id, param_dict):
             if len(feat_list) < max_seq_num:
                 feat_list += [param_dict["padding_value"]] * (max_seq_num - len(feat_list))
             inputs[col] = np.array([feat_list] * candidates)
+    f = open(inputs_file, "w")
+    f.write(str({k: v.tolist() for k, v in dict(inputs).items()}))
     return dict(inputs)
 
 
@@ -58,3 +64,12 @@ def imdb2id(param_dict):
     merge_df = links_df.merge(movies_df, how="left", on="movieId")[["imdbId", "movieId", "title"]]
     imdb2id_dict = {v["imdbId"]: [v["movieId"], v["title"]] for v in merge_df.T.to_dict().values()}
     return imdb2id_dict
+
+
+def user_inputs_glance(param_dict, user_id):
+    user_data = pd.read_csv(os.path.join(param_dict["data_dir"], param_dict["predict_file"]))
+    user_data = user_data[user_data["user_id"] == user_id]
+    movies_df = pd.read_csv(os.path.join(param_dict["data_dir"], "movies.csv"))
+    user_rating_df = user_data.merge(movies_df, how="inner", left_on="movie_id", right_on="movieId")
+    user_rating_df = user_rating_df.sort_values("ratings", ascending=False)
+    return user_rating_df[["movie_id", "ratings", "title", "genres"]]
