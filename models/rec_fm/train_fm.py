@@ -57,7 +57,7 @@ if __name__ == "__main__":
                                           "click_seq_1240", "click_seq_1270", "click_seq_2291", "click_seq_163",
                                           "click_seq_1226", "click_seq_943", "click_seq_1265", "click_seq_3273",
                                           "click_seq_1625", "click_seq_1092"]]),
-                  "genres": np.array([["genres_Comedy", "genres_War"] + ["padding_value"] * 3])}
+                  "genres": np.array([["genres_Comedy", "genres_War"] + ["padding_value"] * 8])}
         outputs = fm_model.predict(inputs)
         print(outputs)
     if param_dict["mode"] == "predict":
@@ -71,7 +71,8 @@ if __name__ == "__main__":
         outputs = fm_model.predict(inputs)
         recom_df = get_recommendations(inputs=inputs, outputs=outputs, param_dict=param_dict)
         filter1 = (~recom_df["genres"].str.contains("Documentary"))
-        filter2 = (recom_df["screen_year"] >= 2000)
+        filter2 = (recom_df["screen_year"] >= 1990)
         filter3 = (recom_df["genres"] != "(no genres listed)")
-        recom_df = recom_df[filter1 & filter2 & filter3]
+        filter4 = (recom_df["rating_counts"] > 3000)
+        recom_df = recom_df[filter2 & filter3 & filter4]
         print(recom_df.head(20))

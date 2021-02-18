@@ -5,10 +5,13 @@ from collections import defaultdict
 
 
 def get_inputs(user_id, param_dict):
-    inputs_file = os.path.join(param_dict["model_dir"], param_dict["inputs_file"])
+    inputs_file = os.path.join(param_dict["data_dir"], param_dict["inputs_file"])
     if os.path.exists(inputs_file):
-        inputs_dict = eval(open(inputs_file, "r").read().strip())
-        return {k: np.array(v) for k, v in inputs_dict.items()}
+        f = open(inputs_file, "r")
+        inputs_dict = eval(f.read().strip())
+        if user_id in inputs_dict:
+            return {k: np.array(v) for k, v in inputs_dict[user_id].items()}
+        f.close()
     inputs = defaultdict(np.ndarray)
     all_data = pd.read_csv(os.path.join(param_dict["data_dir"], param_dict["data_file"]))
     user_data = pd.read_csv(os.path.join(param_dict["data_dir"], param_dict["predict_file"]))
@@ -40,6 +43,8 @@ def get_inputs(user_id, param_dict):
             click_seq = user_data[user_data["ratings"] >= 4].sort_values("ratings", ascending=False)[
                 "movie_id"].to_list()
             click_seq = ["click_seq_" + str(i) for i in click_seq]
+            if len(click_seq) > 30:
+                click_seq = np.random.choice(click_seq, size=30, replace=False)
             if len(click_seq) < 30:
                 click_seq += [param_dict["padding_value"]] * (30 - len(click_seq))
             inputs["click_seq"] = np.array([click_seq] * candidates)
@@ -51,8 +56,15 @@ def get_inputs(user_id, param_dict):
             if len(feat_list) < max_seq_num:
                 feat_list += [param_dict["padding_value"]] * (max_seq_num - len(feat_list))
             inputs[col] = np.array([feat_list] * candidates)
-    f = open(inputs_file, "w")
-    f.write(str({k: v.tolist() for k, v in dict(inputs).items()}))
+    if os.path.exists(inputs_file):
+        f = open(inputs_file, "r")
+        inputs_dict = eval(f.read().strip())
+        inputs_dict = {**inputs_dict, **{user_id: {k: v.tolist() for k, v in dict(inputs).items()}}}
+        f = open(inputs_file, "w")
+        f.write(str(inputs_dict))
+    else:
+        f = open(inputs_file, "w")
+        f.write(str({user_id: {k: v.tolist() for k, v in dict(inputs).items()}}))
     return dict(inputs)
 
 

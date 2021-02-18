@@ -4,6 +4,7 @@
 # Description: Construct train data for FM model
 
 import re
+import numpy as np
 import pandas as pd
 from datetime import datetime
 
@@ -66,12 +67,26 @@ def get_rating_feats(data_file):
     return rating_feats
 
 
-def get_click_seq(click_df, max_seq_num):
+def get_click_seq(click_df):
     g = click_df.groupby("userId")
-    click_seq = g.apply(lambda x: "|".join(
-        x.sort_values("timestamp", ascending=False).head(max_seq_num)["movieId"].astype(str))).reset_index()
-    click_seq.columns = ["userId", "click_seq"]
+    click_seq = g.apply(lambda x: process_click_seq_info(x)).reset_index()
+    click_seq.columns = ["userId", "click_seq_info"]
     return click_seq
+
+
+def process_click_seq_info(g):
+    g = g.sort_values("timestamp", ascending=False)
+    return "|".join(g["movieId"].astype(str) + "," + g["timestamp"].astype(str))
+
+
+def process_click_seq(x, max_seq_num):
+    click_seq_info, timestamp = x["click_seq_info"], x["timestamp"]
+    if type(click_seq_info) != str and np.isnan(click_seq_info):
+        return ""
+    if type(click_seq_info)==float:
+        print(click_seq_info)
+    clicks = [i.split(",")[0] for i in click_seq_info.split("|") if int(i.split(",")[1]) < timestamp][:max_seq_num]
+    return "|".join(clicks)
 
 
 def get_clean_df(movie_file, rating_file, threshold=4, max_seq_num=30):
@@ -79,17 +94,17 @@ def get_clean_df(movie_file, rating_file, threshold=4, max_seq_num=30):
     base_df["label"] = base_df["rating"].apply(lambda x: 1 if x >= threshold else 0)
     movie_df = get_movies_profile(movie_file)
     rating_feats = get_rating_feats(rating_file)
-    click_seq = get_click_seq(base_df[base_df["label"] == 1], max_seq_num)
+    click_seq = get_click_seq(base_df[base_df["label"] == 1])
     clean_df = base_df.merge(movie_df, how="left", on="movieId") \
         .merge(rating_feats, how="left", on="movieId") \
         .merge(click_seq, how="left", on="userId")
+    clean_df["click_seq"] = clean_df.apply(lambda x: process_click_seq(x, max_seq_num), axis=1)
     return clean_df
 
-
 if __name__ == '__main__':
-    movie_file = "../data/movieLens1m_201809/movies.csv"
-    rating_file = "../data/movieLens1m_201809/ratings.csv"
-    target_file = "../data/movieLens1m_201809/data.csv"
+    movie_file = "../data/movieLens25m_201912/movies.csv"
+    rating_file = "../data/movieLens25m_201912/ratings.csv"
+    target_file = "../data/movieLens25m_201912/data.csv"
     threshold = 4
     max_seq_num = 30
     columns = ["userId", "movieId", "label", "rating", "screen_year", "rating_counts", "rating_mean", "genres",

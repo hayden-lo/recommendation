@@ -53,13 +53,17 @@ def parse_data(row, param_dict):
     record = tf.io.decode_csv(row, record_defaults=param_dict["default_val"], field_delim=param_dict["delimiter"])
     col2val = {col: val for col, val in zip(param_dict["all_columns"], record)}
     # target item
-    tgt_dict = {"movieId": tf.expand_dims("click_seq_" + col2val["movieId"], axis=0)}
+    tgt_dict = {"movieId": tf.expand_dims(
+        "click_seq_" + tf.where(tf.equal(col2val["movieId"], ""), param_dict["padding_value"], col2val["movieId"]),
+        axis=0)}
     # categorical features
-    cat_dict = {cat: tf.expand_dims(cat + "_" + col2val[cat], axis=0) for cat in param_dict["cat_columns"]}
+    cat_dict = {cat: tf.expand_dims(cat + "_" + tf.where(tf.equal(col2val[cat], ""), param_dict["padding_value"],
+                                                         col2val[cat]), axis=0) for cat in param_dict["cat_columns"]}
     # sequence features
     seq_dict = defaultdict(list)
     for seq, max_seq_num in param_dict["seq_columns"].items():
         seq_val = tf.strings.split([col2val[seq]], "|").values[:max_seq_num]
+        seq_val = tf.where(tf.equal(seq_val, ""), param_dict["padding_value"], seq_val)
         seq_val = tf.strings.join([seq, seq_val], "_")
         seq_val = tf.pad(seq_val, [[0, max_seq_num - tf.shape(seq_val)[0]]],
                          constant_values=param_dict["padding_value"])

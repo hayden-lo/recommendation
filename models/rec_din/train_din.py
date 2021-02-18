@@ -1,7 +1,9 @@
-import numpy as np
 from functools import partial
+from config.configs import *
+from models.rec_din.model_din import DIN
+from utils.get_inputs import get_inputs
+from utils.predict_methods import get_recommendations
 from utils.preprocessing import *
-from rec_din.model_din import *
 from utils.tf_utils import *
 
 
@@ -27,46 +29,44 @@ def run(param_dict):
 
 
 if __name__ == "__main__":
-    param_dict = {"model_dir": "./model_dir",
-                  "data_dir": "../data/movieLens1m_201809",
-                  "data_file": "data.csv",
-                  "train_file": "train.csv",
-                  "test_file": "test.csv",
-                  "all_columns": ["userId", "movieId", "label", "rating", "screen_year", "rating_counts", "rating_mean",
-                                  "genres", "click_seq"],
-                  "cat_columns": ["screen_year", "rating_counts", "rating_mean"],
-                  "seq_columns": {"genres": 5, "click_seq": 30},
-                  "data_type": [np.str, np.str, np.float, np.float, np.str, np.str, np.str, np.str, np.str],
-                  "default_val": [[""]] * 2 + [[0.0]] * 2 + [[""]] * 5,
-                  "delimiter": ",",
-                  "padding_value": "padding_value",
-                  "min_hit": 3,
-                  "act_fun": "relu",
-                  "reg_fun": "l2",
-                  "hidden_units": [64, 32, 1],
-                  "batch_size": 128,
-                  "emb_size": 128,
-                  "learning_rate": 0.001,
-                  "optimizer": "adam",
-                  "loss_fun": "binary_cross_entropy",
-                  "from_logits": False,
-                  "metrics": ["auc"],
-                  "epoch_num": 1}
-    run(param_dict)
-    print("====================Model Predicting====================")
-    din_model = tf.keras.models.load_model(param_dict["model_dir"])
-    inputs = {"movieId": np.array([["click_seq_157"]]),
-              "screen_year": np.array([["screen_year_7"]]),
-              "rating_counts": np.array([["rating_counts_4"]]),
-              "rating_mean": np.array([["rating_mean_2"]]),
-              "click_seq": np.array([["click_seq_2492", "click_seq_2012", "click_seq_2478", "click_seq_553",
-                                      "click_seq_157", "click_seq_3053", "click_seq_1298", "click_seq_3448",
-                                      "click_seq_151", "click_seq_1090", "click_seq_1224", "click_seq_5060",
-                                      "click_seq_527", "click_seq_3147", "click_seq_2353", "click_seq_47",
-                                      "click_seq_593", "click_seq_3033", "click_seq_1206", "click_seq_3702",
-                                      "click_seq_1240", "click_seq_1270", "click_seq_2291", "click_seq_163",
-                                      "click_seq_1226", "click_seq_943", "click_seq_1265", "click_seq_3273",
-                                      "click_seq_1625", "click_seq_1092"]]),
-              "genres": np.array([["genres_Comedy", "genres_War"] + ["padding_value"] * 3])}
-    outputs = din_model.predict(inputs)
-    print(outputs)
+    specific_dict = {"mode": "dev", "hidden_units": [64, 32, 1], "epoch_num": 5}
+    train_dict = {"min_hit": 3000, "batch_size": 512, "learning_rate": 0.001, "epoch_num": 5,
+                  "callbacks": [get_early_stop()]}
+    predict_params["user_id"] = 999998
+    param_dict = {**universal_params, **specific_dict}
+    if param_dict["mode"] == "train":
+        param_dict = {**param_dict, **train_params, **train_dict}
+    if param_dict["mode"] in ("train", "dev"):
+        run(param_dict)
+        print("====================Model Predicting====================")
+        din_model = tf.keras.models.load_model(param_dict["model_dir"])
+        inputs = {"movieId": np.array([["click_seq_157"]]),
+                  "screen_year": np.array([["screen_year_7"]]),
+                  "rating_counts": np.array([["rating_counts_4"]]),
+                  "rating_mean": np.array([["rating_mean_2"]]),
+                  "click_seq": np.array([["click_seq_2492", "click_seq_2012", "click_seq_2478", "click_seq_553",
+                                          "click_seq_157", "click_seq_3053", "click_seq_1298", "click_seq_3448",
+                                          "click_seq_151", "click_seq_1090", "click_seq_1224", "click_seq_5060",
+                                          "click_seq_527", "click_seq_3147", "click_seq_2353", "click_seq_47",
+                                          "click_seq_593", "click_seq_3033", "click_seq_1206", "click_seq_3702",
+                                          "click_seq_1240", "click_seq_1270", "click_seq_2291", "click_seq_163",
+                                          "click_seq_1226", "click_seq_943", "click_seq_1265", "click_seq_3273",
+                                          "click_seq_1625", "click_seq_1092"]]),
+                  "genres": np.array([["genres_Comedy", "genres_War"] + ["padding_value"] * 18])}
+        outputs = din_model.predict(inputs)
+        print(outputs)
+    if param_dict["mode"] == "predict":
+        param_dict = {**param_dict, **predict_params}
+        din_model = tf.keras.models.load_model(param_dict["model_dir"])
+        print("====================Constructing Inputs====================")
+        start = time.time()
+        inputs = get_inputs(user_id=param_dict["user_id"], param_dict=param_dict)
+        elasped = round(time.time() - start, 2)
+        print("====================Constructing Inputs Elaspe {} seconds====================".format(elasped))
+        outputs = din_model.predict(inputs)
+        recom_df = get_recommendations(inputs=inputs, outputs=outputs, param_dict=param_dict)
+        # filter1 = (~recom_df["genres"].str.contains("Documentary"))
+        # filter2 = (recom_df["screen_year"] >= 2000)
+        # filter3 = (recom_df["genres"] != "(no genres listed)")
+        # recom_df = recom_df[filter1 & filter2 & filter3]
+        print(recom_df.head(20))
