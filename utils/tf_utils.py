@@ -37,16 +37,45 @@ def get_act_fun(alias, **kwargs):
     if alias is None:
         return None
     if str.lower(alias) == "relu":
-        return tf.nn.relu
+        return tf.nn.relu(**kwargs)
+    if str.lower(alias) == "sigmoid":
+        return tf.nn.sigmoid(**kwargs)
+    if str.lower(alias) == "tanh":
+        return tf.nn.tanh(**kwargs)
+    if str.lower(alias) == "dice":
+        alphas = tf.initializers.truncated_normal(**kwargs)
+        bn_layer = tf.keras.layers.BatchNormalization(**kwargs)
+        bn_out = bn_layer.apply(**kwargs)
+        sig = tf.nn.sigmoid(bn_out)
+        return alphas * (1.0 - sig) * pre_active + sig * pre_active
 
 
 def get_reg_fun(alias, **kwargs):
     if alias is None:
         return None
+    if not isinstance(alias, str):
+        return alias
     if str.lower(alias) == "l1":
         return tf.keras.regularizers.L1(**kwargs)
     if str.lower(alias) == "l2":
         return tf.keras.regularizers.L2(**kwargs)
+
+
+def get_init_fun(alias, **kwargs):
+    if not isinstance(alias, str):
+        return alias
+    if alias == "glorot_normal":
+        return tf.initializers.glorot_normal(**kwargs)
+    if alias == "lecun_normal":
+        return tf.initializers.lecun_normal(**kwargs)
+    if alias == "lecun_uniform":
+        return tf.initializers.lecun_uniform(**kwargs)
+    if alias == "truncated_normal":
+        return tf.initializers.truncated_normal(**kwargs)
+    if alias == "random_normal" or alias == "normal":
+        return tf.initializers.random_normal(**kwargs)
+    if alias == "random_uniform" or alias == "uniform":
+        return tf.initializers.random_uniform(**kwargs)
 
 
 def get_early_stop():

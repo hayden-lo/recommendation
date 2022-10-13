@@ -1,4 +1,4 @@
-from models.rec_layers.layer_mlp import *
+from layers.layer_mlp import *
 
 
 class AttentionLayer(tf.keras.layers.Layer):

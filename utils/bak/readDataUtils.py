@@ -39,12 +39,6 @@ def get_movie_info(input_path, sep=","):
     return movie_dict
 
 
-
-
-
-
-
-
 if __name__ == '__main__':
     pass
     # train_data = get_train_data(input_path="../data/ratings.csv", threshold=4, sep=",")

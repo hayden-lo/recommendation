@@ -1,6 +1,6 @@
 from functools import partial
 from config.configs import *
-from models.rec_fm.model_fm import *
+from models.fm.model_fm import *
 from utils.predict_methods import *
 from utils.preprocessing import *
 
