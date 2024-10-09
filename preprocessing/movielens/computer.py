@@ -94,17 +94,20 @@ def group_cumsum(df, group_feat, sum_feat, time_feat):
 
 def get_group_most_rated_genre(df, group_feat, tag_feat, time_feat):
     data_list = []
+    df = df[[group_feat, tag_feat, time_feat]]
     group_expanding = df.sort_values(by=time_feat).groupby(group_feat).expanding()
     for expanding in group_expanding:
-        genre_list = expanding.shift(1).apply(lambda x: x[tag_feat].split("|") if isinstance(x[tag_feat], str) else [],
-                                              axis=1).to_list()
-        counter = Counter(reduce(lambda x, y: x + y, genre_list)).most_common(1)
-        data_list.append("" if len(counter) == 0 else counter[0][0])
+        genre_list = expanding.shift(1)[tag_feat].str.split("|").dropna().to_list()
+        # counter = Counter(reduce(lambda x, y: x + y, genre_list)).most_common(1) if len(genre_list) > 0 else [[""]]
+        from itertools import chain
+        counter = Counter(chain.from_iterable(genre_list)).most_common(1) if len(genre_list) > 0 else [[""]]
+        data_list.append(counter[0][0])
     return data_list
 
 
 def get_group_highest_rated_genre(df, group_feat, tag_feat, rate_feat, time_feat):
     data_list = []
+    df = df[[group_feat, tag_feat, rate_feat, time_feat]]
     group_expanding = df.sort_values(by=time_feat).groupby(group_feat).expanding()
     for expanding in group_expanding:
         genre_datas = expanding.shift(1).apply(
@@ -116,9 +119,9 @@ def get_group_highest_rated_genre(df, group_feat, tag_feat, rate_feat, time_feat
                 continue
             for genre in genre_data[0]:
                 genre_count[genre] += 1
-                genre_rate[genre] += aa[1]
+                genre_rate[genre] += genre_data[1]
         genre_avg_rate = {k: genre_rate[k] / v for k, v in genre_count.items()}
-        l.append(max(genre_avg_rate, key=genre_avg_rate.get) if len(genre_avg_rate) > 0 else "")
+        data_list.append(max(genre_avg_rate, key=genre_avg_rate.get) if len(genre_avg_rate) > 0 else "")
     return data_list
 
 

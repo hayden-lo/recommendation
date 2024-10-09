@@ -1,5 +1,4 @@
 import datetime
-import os
 import time
 import random
 import numpy as np
@@ -7,7 +6,6 @@ import pandas as pd
 import tensorflow as tf
 from datetime import datetime
 from collections import defaultdict
-from utils.log_utils import logger
 from utils.mysql_utils import MysqlClient
 
 
@@ -25,25 +23,7 @@ def get_default_val(all_columns):
     return default_val
 
 
-def split_data(instance_data, sample_rate=0.7, delimiter=","):
-    train_file = os.path.join(os.path.realpath(instance_data), "train.csv")
-    test_file = os.path.join(os.path.realpath(instance_data), "test.csv")
-    if os.path.exists(train_file) and os.path.exists(test_file):
-        return train_file, test_file
-    logger("Splitting Data")
-    start = time.time()
-    df = pd.read_csv(instance_data)
-    train_df = df.sample(frac=sample_rate)
-    test_df = df[~df.index.isin(train_df.index)]
-    train_df.to_csv(train_file, header=False, index=False, sep=delimiter)
-    test_df.to_csv(test_file, header=False, index=False, sep=delimiter)
-    elapsed = time.time() - start
-    logger(f"Splitting Data Elapse {round(elapsed / 60, 2)} minutes")
-    return train_file, test_file
-
-
 def get_valid_feats(param_dict):
-    logger("Get valid features")
     start = time.time()
     df = pd.read_csv(param_dict["train_file"], names=param_dict["all_columns"].keys(), dtype=param_dict["all_columns"],
                      skiprows=1)
@@ -64,7 +44,6 @@ def get_valid_feats(param_dict):
                 seq_dict[feat] += 1
         valid_feat_list += [k for k, v in seq_dict.items() if v >= param_dict["min_hits"]]
     elapsed = time.time() - start
-    logger(f"Get Valid features elapse {round(elapsed / 60, 2)} minutes")
     return list(set(valid_feat_list))
 
 
@@ -149,3 +128,8 @@ def get_duplicate_keys(same_dict):
         for i in range(1, len(v)):
             duplicate_keys.append(list(v)[i])
     return duplicate_keys
+
+
+def round_up(n, d):
+    tens = 10 ** d
+    return round(n * tens) / tens

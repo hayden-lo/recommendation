@@ -6,6 +6,7 @@ from preprocessing.movielens.computer import *
 from utils.tf_utils import get_vocab_dict
 from utils.log_utils import logger
 from utils.toolkit import low_memory_df
+from utils.time_utils import seconds_elapse
 
 
 def main():
@@ -20,8 +21,8 @@ def main():
         lambda x: "|".join([str(i) for i in x])).reset_index()
     data_df = pd.merge(ratings_df, movies_df, on=["movieId"], how="left")
     data_df = pd.merge(data_df, tags_df, on=["userId", "movieId"], how="left")
-    data_df = low_memory_df(data_df)
-    logger(f"Merge data elapsed {round((time.time() - merge_start) / 60, 2)} mins")
+    data_df = low_memory_df(data_df).head(10000)
+    logger(f"Merge data elapsed {round((time.time() - merge_start) / 60, 2)} mins, data count: {data_df.shape[0]}")
 
     logger("Extracting features")
     extract_start = time.time()
@@ -37,25 +38,34 @@ def main():
     data_df["tag"] = data_df["tag"].apply(normalize_tag)
     # genres
     data_df["genres"] = data_df["genres"].apply(normalize_genres)
+    logger(f"genres, {seconds_elapse(extract_start)}")
     # click sequence
     click_seq_info = get_click_seq_info(data_df, conf.POSITIVE_RATING)
     data_df["click_seq"] = data_df.apply(lambda x: get_click_seq(x, click_seq_info, conf.MAX_CLICK_LENGTH), axis=1)
+    logger(f"click sequence, {seconds_elapse(extract_start)}")
     # movie rating users
     data_df["movie_rating_users"] = group_cumcount(data_df, "movieId", "userId", "timestamp", is_unique=True)
+    logger(f"movie_rating_users, {seconds_elapse(extract_start)}")
     # user rating movies
     data_df["user_rating_movies"] = group_cumcount(data_df, "userId", "movieId", "timestamp", is_unique=True)
+    logger(f"user_rating_movies, {seconds_elapse(extract_start)}")
     # movie sum rating
     data_df["movie_sum_rating"] = group_cumsum(data_df, "movieId", "rating", "timestamp")
+    logger(f"movie_sum_rating, {seconds_elapse(extract_start)}")
     # user sum rating
     data_df["user_sum_rating"] = group_cumsum(data_df, "userId", "rating", "timestamp")
+    logger(f"user_sum_rating, {seconds_elapse(extract_start)}")
     # movie average rating
     data_df["movie_average_rating"] = data_df["movie_sum_rating"] / data_df["movie_rating_users"]
+    logger(f"movie_average_rating, {seconds_elapse(extract_start)}")
     # user average rating
     data_df["user_average_rating"] = data_df["user_sum_rating"] / data_df["user_rating_movies"]
+    logger(f"user_average_rating, {seconds_elapse(extract_start)}")
     # user most rated genre
-    data_df["user_most_rated_genre"] = get_group_most_rated_genre(data_df, "userId", "tags", "timestamp")
+    data_df["user_most_rated_genre"] = get_group_most_rated_genre(data_df, "userId", "genres", "timestamp")
+    logger(f"user_most_rated_genre, {seconds_elapse(extract_start)}")
     # user favourite genre
-    data_df["user_favourite_genre"] = get_group_highest_rated_genre(data_df, "userId", "tags", "rating", "timestamp")
+    data_df["user_favourite_genre"] = get_group_highest_rated_genre(data_df, "userId", "genres", "rating", "timestamp")
     logger(f"Extract features elapsed {round((time.time() - extract_start) / 60, 2)} mins")
 
     logger("Splitting train set and test set")
