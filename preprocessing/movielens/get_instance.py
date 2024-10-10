@@ -69,8 +69,8 @@ def main():
     logger(f"user_favourite_genre, {seconds_elapse(extract_start)}")
     logger(f"Extract features elapsed {round((time.time() - extract_start) / 60, 2)} mins")
 
-    import sys
-    sys.exit(-1)
+    # import sys
+    # sys.exit(-1)
 
     logger("Splitting train set and test set")
     train_instance = data_df[data_df["timestamp"] <= datetime.strptime(conf.SPLIT_DATE, "%Y-%m-%d").timestamp()]
