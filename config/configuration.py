@@ -1,12 +1,12 @@
 import numpy as np
 
 # Instance parameters
-RATINGS_FILE = "D:\\git\\recommendation\\data\\ml-25m\\ratings.csv"
-MOVIES_FILE = "D:\\git\\recommendation\\data\\ml-25m\\movies.csv"
-TAGS_FILE = "D:\\git\\recommendation\\data\\ml-25m\\tags.csv"
-INSTANCE_FILE = "D:\\git\\recommendation\\data\\ml-25m\\instance.csv"
-TRAIN_FILE = "D:\\git\\recommendation\\data\\ml-25m\\train.csv"
-TEST_FILE = "D:\\git\\recommendation\\data\\ml-25m\\test.csv"
+RATINGS_FILE = "C:\\git\\recommendation\\data\\ml-32m\\ratings.csv"
+MOVIES_FILE = "C:\\git\\recommendation\\data\\ml-32m\\movies.csv"
+TAGS_FILE = "C:\\git\\recommendation\\data\\ml-32m\\tags.csv"
+INSTANCE_FILE = "C:\\git\\recommendation\\data\\ml-32m\\instance.csv"
+TRAIN_FILE = "C:\\git\\recommendation\\data\\ml-32m\\train.csv"
+TEST_FILE = "C:\\git\\recommendation\\data\\ml-32m\\test.csv"
 MAX_CLICK_LENGTH = 10
 MIN_RATED_NUM = 10
 POSITIVE_RATING = 4.0

@@ -1,10 +1,10 @@
 # Instance parameters
-RATINGS_FILE = "D:\\git\\recommendation\\data\\ml-25m\\ratings.csv"
-MOVIES_FILE = "D:\\git\\recommendation\\data\\ml-25m\\movies.csv"
-TAGS_FILE = "D:\\git\\recommendation\\data\\ml-25m\\tags.csv"
-TRAIN_FILE = "D:\\git\\recommendation\\data\\ml-25m\\train.csv"
-TEST_FILE = "D:\\git\\recommendation\\data\\ml-25m\\test.csv"
-VOCAB_FILE = "D:\\git\\recommendation\\data\\ml-25m\\vocab_dict.pkl"
+RATINGS_FILE = "C:\\git\\recommendation\\data\\ml-32m\\ml-32m\\ratings.csv"
+MOVIES_FILE = "C:\\git\\recommendation\\data\\ml-32m\\ml-32m\\movies.csv"
+TAGS_FILE = "C:\\git\\recommendation\\data\\ml-32m\\ml-32m\\tags.csv"
+TRAIN_FILE = "C:\\git\\recommendation\\data\\ml-32m\\ml-32m\\train.csv"
+TEST_FILE = "C:\\git\\recommendation\\data\\ml-32m\\ml-32m\\test.csv"
+VOCAB_FILE = "C:\\git\\recommendation\\data\\ml-32m\\ml-32m\\vocab_dict.pkl"
 SPLIT_DATE = "2019-10-01"
 MAX_CLICK_LENGTH = 10
 MIN_RATED_NUM = 10

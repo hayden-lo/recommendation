@@ -1,7 +1,7 @@
 import re
 import math
 import pandas as pd
-from functools import reduce
+from itertools import chain
 from collections import defaultdict, Counter
 
 
@@ -74,7 +74,7 @@ def group_cumcount(df, group_feat, count_feat, time_feat, is_unique=True):
     need_df = df[[group_feat, count_feat, time_feat]]
     need_df = need_df.sort_values(by=[group_feat, time_feat])
     if is_unique:
-        need_df.drop_duplicates(subset=[group_feat, count_feat]).sort_values(by=[group_feat, count_feat], inplace=True)
+        need_df = need_df.drop_duplicates(subset=[group_feat, count_feat]).sort_values(by=[group_feat, count_feat])
     return need_df.groupby(group_feat).cumcount()
 
 
@@ -98,8 +98,6 @@ def get_group_most_rated_genre(df, group_feat, tag_feat, time_feat):
     group_expanding = df.sort_values(by=time_feat).groupby(group_feat).expanding()
     for expanding in group_expanding:
         genre_list = expanding.shift(1)[tag_feat].str.split("|").dropna().to_list()
-        # counter = Counter(reduce(lambda x, y: x + y, genre_list)).most_common(1) if len(genre_list) > 0 else [[""]]
-        from itertools import chain
         counter = Counter(chain.from_iterable(genre_list)).most_common(1) if len(genre_list) > 0 else [[""]]
         data_list.append(counter[0][0])
     return data_list
@@ -110,8 +108,9 @@ def get_group_highest_rated_genre(df, group_feat, tag_feat, rate_feat, time_feat
     df = df[[group_feat, tag_feat, rate_feat, time_feat]]
     group_expanding = df.sort_values(by=time_feat).groupby(group_feat).expanding()
     for expanding in group_expanding:
-        genre_datas = expanding.shift(1).apply(
-            lambda x: (x[tag_feat].split("|"), x[rate_feat]) if isinstance(x[tag_feat], str) else [], axis=1).to_list()
+        expanding.loc[:, tag_feat] = expanding.shift(1)[tag_feat].str.split("|")
+        expanding = expanding.dropna()
+        genre_datas = zip(expanding[tag_feat], expanding[rate_feat].dropna())
         genre_count = defaultdict(int)
         genre_rate = defaultdict(float)
         for genre_data in genre_datas:
