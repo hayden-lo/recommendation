@@ -1,5 +1,5 @@
 from functools import partial
-from config.configuration import debug_inputs
+from env.configuration import debug_inputs
 from models.fm.config_fm import params
 from models.fm.model_fm import *
 from utils.toolkit import *

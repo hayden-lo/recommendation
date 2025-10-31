@@ -1,5 +1,5 @@
 from functools import partial
-from config.configs import *
+from env.configs import *
 from models.fm.model_fm import *
 from utils.bak.predict_methods import *
 from utils.bak.preprocessing import *

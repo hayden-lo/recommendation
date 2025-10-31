@@ -71,21 +71,6 @@ def parse_data(row, param_dict):
     return features, col2val["label"]
 
 
-def low_memory_df(df, low_level="min"):
-    for col, d in zip(df.columns, df.dtypes):
-        if np.issubdtype(d, np.integer):
-            if low_level == "min":
-                df[col] = df[col].astype(np.int16)
-            if low_level == "median":
-                df[col] = df[col].astype(np.int32)
-        if np.issubdtype(d, np.floating):
-            if low_level == "min":
-                df[col] = df[col].astype(np.float16)
-            if low_level == "median":
-                df[col] = df[col].astype(np.float32)
-    return df
-
-
 def write_content(content_list, id_prefix, id_column, content_column, table):
     m = MysqlClient()
     exist_id_list = m.get_data(f"select {id_column} from {table}")[id_column].to_list()
@@ -128,8 +113,3 @@ def get_duplicate_keys(same_dict):
         for i in range(1, len(v)):
             duplicate_keys.append(list(v)[i])
     return duplicate_keys
-
-
-def round_up(n, d):
-    tens = 10 ** d
-    return round(n * tens) / tens

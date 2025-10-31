@@ -6,12 +6,11 @@ from collections import defaultdict, Counter
 
 
 # publish year
-def retrieve_publish_year(x):
+def retrieve_publish_year(x, default_value="unknown"):
     if re.match(r"\((\d{4})\)$", x.strip()[-6:]) is not None:
-        publish_year = int(x.strip()[-5:-1])
-        return str(publish_year)
+        return x.strip()[-5:-1]
     else:
-        return "unknown"
+        return default_value
 
 
 # title
@@ -22,22 +21,14 @@ def normalize_title(x):
         return x.strip().lower()
 
 
-# tag
-def normalize_tag(x):
-    if isinstance(x, str):
-        return x.strip().lower()
-    else:
-        return "unknown"
-
-
 # genres
-def normalize_genres(x):
+def normalize_genres(x, default_value="unknown"):
     if isinstance(x, str):
         genre_list = x.strip().lower().split("|")
         genre_list = sorted(genre_list)
         return "|".join(genre_list)
     else:
-        return "unknown"
+        return default_value
 
 
 # click sequence
@@ -53,11 +44,19 @@ def get_click_seq_info(df, positive_rating):
     return click_seq_info
 
 
-def get_click_seq(x, click_seq_info, max_click_length):
-    user_id, timestamp = x["userId"], x["timestamp"]
-    click_seq = click_seq_info.get(user_id, ",1").split("|")
-    clicks = [i.split(",")[0] for i in click_seq if int(i.split(",")[1]) < timestamp][:max_click_length]
-    return "|".join(clicks)
+# def get_click_seq(x, click_seq_info, max_click_length):
+#     user_id, timestamp = x["userId"], x["timestamp"]
+#     click_seq = click_seq_info.get(user_id, ",1").split("|")
+#     clicks = [i.split(",")[0] for i in click_seq if int(i.split(",")[1]) < timestamp][:max_click_length]
+#     return "|".join(clicks)
+
+def get_click_seq(df, max_click_length):
+    df = df[df["label"] == 1].sort_values(by=["userId", "timestamp"])
+    df["movie_ts"] = df["movieId"].astype(str) + "::" + df["timestamp"].astype(str)
+    df["click_seq"] = df.groupby("userId")["movie_ts"][:3].transform(
+        lambda x: (x + ",").cumsum().shift(1).str.rstrip(","))
+    df["click_seq"] = df["click_seq"].str.split(",").apply(lambda x: ",".join(x[-max_click_length:]))
+    return df
 
 
 # group counts

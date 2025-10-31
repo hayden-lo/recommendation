@@ -1,5 +1,5 @@
 from functools import partial
-from config.configs import *
+from env.configs import *
 from models.din.model_din import DIN
 from utils.bak.get_inputs import get_inputs
 from utils.bak.predict_methods import get_recommendations

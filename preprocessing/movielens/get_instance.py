@@ -1,44 +1,28 @@
 import time
 import pickle
 from datetime import datetime
-import preprocessing.movielens.preprocess_config as conf
+import env.configuration as conf
 from preprocessing.movielens.computer import *
 from utils.tf_utils import get_vocab_dict
 from utils.log_utils import logger
-from utils.toolkit import low_memory_df
 from utils.time_utils import seconds_elapse
 
 
 def main():
     logger("Loading data")
-    ratings_df = pd.read_csv(conf.RATINGS_FILE)
-    movies_df = pd.read_csv(conf.MOVIES_FILE)
-    tags_df = pd.read_csv(conf.TAGS_FILE)
-
-    logger("Merging data")
-    merge_start = time.time()
-    tags_df = tags_df.groupby(["userId", "movieId"])["tag"].unique().apply(
-        lambda x: "|".join([str(i) for i in x])).reset_index()
-    data_df = pd.merge(ratings_df, movies_df, on=["movieId"], how="left")
-    data_df = pd.merge(data_df, tags_df, on=["userId", "movieId"], how="left")
-    data_df = low_memory_df(data_df)
-    logger(f"Merge data elapsed {round((time.time() - merge_start) / 60, 2)} mins, data count: {data_df.shape[0]}")
+    ratings_df = pd.read_csv(conf.MOVIELENS_25M_RATINGS)
+    movies_df = pd.read_csv(conf.MOVIELENS_25M_MOVIES)
 
     logger("Extracting features")
     extract_start = time.time()
     # label
-    data_df["label"] = data_df["rating"].apply(lambda x: 1.0 if x >= conf.POSITIVE_RATING else 0.0)
+    ratings_df["label"] = (ratings_df["rating"] >= conf.MOVIELENS_POSITIVE_THRESHOLD).astype(float)
     # weight
-    data_df["weight"] = 1.0
+    ratings_df["weight"] = 1.0
     # publish year
-    data_df["publish_year"] = data_df["title"].apply(retrieve_publish_year)
-    # title
-    data_df["title"] = data_df["title"].apply(normalize_title)
-    # tag
-    data_df["tag"] = data_df["tag"].apply(normalize_tag)
+    movies_df["publish_year"] = movies_df["title"].apply(retrieve_publish_year)
     # genres
-    data_df["genres"] = data_df["genres"].apply(normalize_genres)
-    logger(f"genres, {seconds_elapse(extract_start)}")
+    movies_df["genres"] = movies_df["genres"].apply(normalize_genres)
     # click sequence
     click_seq_info = get_click_seq_info(data_df, conf.POSITIVE_RATING)
     data_df["click_seq"] = data_df.apply(lambda x: get_click_seq(x, click_seq_info, conf.MAX_CLICK_LENGTH), axis=1)
@@ -69,8 +53,10 @@ def main():
     logger(f"user_favourite_genre, {seconds_elapse(extract_start)}")
     logger(f"Extract features elapsed {round((time.time() - extract_start) / 60, 2)} mins")
 
-    # import sys
-    # sys.exit(-1)
+    logger("Merging data")
+    merge_start = time.time()
+    data_df = pd.merge(ratings_df, movies_df, on=["movieId"], how="left")
+    logger(f"Merge data elapsed {seconds_elapse(merge_start)} seconds, data count: {data_df.shape[0]}")
 
     logger("Splitting train set and test set")
     train_instance = data_df[data_df["timestamp"] <= datetime.strptime(conf.SPLIT_DATE, "%Y-%m-%d").timestamp()]
