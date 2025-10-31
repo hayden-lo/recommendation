@@ -53,7 +53,7 @@ def get_click_seq_info(df, positive_rating):
 def get_click_seq(df, max_click_length):
     df = df[df["label"] == 1].sort_values(by=["userId", "timestamp"])
     df["movie_ts"] = df["movieId"].astype(str) + "::" + df["timestamp"].astype(str)
-    df["click_seq"] = df.groupby("userId")["movie_ts"][:3].transform(
+    df["click_seq"] = df.groupby("userId")["movie_ts"].transform(
         lambda x: (x + ",").cumsum().shift(1).str.rstrip(","))
     df["click_seq"] = df["click_seq"].str.split(",").apply(lambda x: ",".join(x[-max_click_length:]))
     return df
