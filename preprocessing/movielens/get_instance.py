@@ -3,7 +3,6 @@ import pickle
 from datetime import datetime
 import env.configuration as conf
 from preprocessing.movielens.computer import *
-from utils.tf_utils import get_vocab_dict
 from utils.log_utils import logger
 from utils.time_utils import seconds_elapse
 
