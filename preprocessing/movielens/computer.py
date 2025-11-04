@@ -32,34 +32,40 @@ def normalize_genres(x, default_value="unknown"):
 
 
 # click sequence
-# def get_click_seq(df, max_click_length):
-#     df = df.assign(original_idx=df.index).sort_values(["userId", "timestamp"])
-#     df["movie_ts"] = df["movieId"].astype(str) + "::" + df["timestamp"].astype(str)
-#     df["click_seq"] = None
-#     for user_id, user_group in df.groupby("userId"):
-#         click_records = user_group[user_group["label"] == 1]
-#         click_records = list(zip(click_records["movie_ts"], click_records["timestamp"]))
-#         for row in user_group.itertuples():
-#             click_list = [movie_ts for movie_ts, ts in click_records if ts < row.timestamp]
-#             click_seq = ",".join(click_list[-max_click_length:]) if click_list else None
-#             df.at[row.Index, "click_seq"] = click_seq
-#     return df.sort_values("original_idx")["click_seq"].tolist()
-
 def get_click_seq(df, max_click_length):
-    df = df.assign(original_idx=df.index).sort_values(["userId", "timestamp"])
+    df = df.sort_values(["userId", "timestamp"])[["userId", "movieId", "timestamp", "label"]]
     df["movie_ts"] = df["movieId"].astype(str) + "::" + df["timestamp"].astype(str)
-    df["click_seq"] = None
+    click_seq_list = [None] * len(df)
     for user_id, user_group in df.groupby("userId"):
         click_records = user_group[user_group["label"] == 1]
         movie_ts_list, timestamp_list = click_records["movie_ts"].tolist(), click_records["timestamp"].tolist()
         last_pos = 0
-        for row in user_group.itertuples():
-            while last_pos < len(click_records) and timestamp_list[last_pos] < row.timestamp:
+        for idx, row in user_group.iterrows():
+            while last_pos < len(click_records) and timestamp_list[last_pos] < row["timestamp"]:
                 last_pos += 1
             click_list = movie_ts_list[max(0, last_pos - max_click_length):last_pos]
             click_seq = ",".join(click_list[-max_click_length:]) if click_list else None
-            df.at[row.Index, "click_seq"] = click_seq
-    return df.sort_values("original_idx")["click_seq"].tolist()
+            click_seq_list[idx] = click_seq
+    return [click_seq_list[i] for i in df.index]
+
+
+# def get_click_seq(df, max_click_length):
+#     df = df.assign(original_idx=df.index).sort_values(["userId", "timestamp"])[
+#         ["userId", "movieId", "timestamp", "label", "original_idx"]]
+#     df["movie_ts"] = df["movieId"].astype(str) + "::" + df["timestamp"].astype(str)
+#     df["click_seq"] = None
+#     for user_id, user_group in df.groupby("userId"):
+#         click_records = user_group[user_group["label"] == 1]
+#         movie_ts_list, timestamp_list = click_records["movie_ts"].tolist(), click_records["timestamp"].tolist()
+#         last_pos = 0
+#         for row in user_group.itertuples():
+#             while last_pos < len(click_records) and timestamp_list[last_pos] < row.timestamp:
+#                 last_pos += 1
+#             click_list = movie_ts_list[max(0, last_pos - max_click_length):last_pos]
+#             click_seq = ",".join(click_list[-max_click_length:]) if click_list else None
+#             df.at[row.Index, "click_seq"] = click_seq
+#     return df.sort_values("original_idx")["click_seq"].tolist()
+
 
 # group counts
 def group_count(df, group_feat, count_feat, is_unique=True):
