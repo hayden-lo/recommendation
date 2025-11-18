@@ -79,9 +79,9 @@ def group_count(df, group_feat, count_feat, is_unique=True):
 # group cumulative count
 def group_cumcount(df, group_feat, count_feat, time_feat, is_unique=True):
     need_df = df[[group_feat, count_feat, time_feat]]
-    need_df = need_df.sort_values(by=[group_feat, time_feat])
     if is_unique:
-        need_df = need_df.drop_duplicates(subset=[group_feat, count_feat]).sort_values(by=[group_feat, count_feat])
+        need_df = need_df.drop_duplicates(subset=[group_feat, count_feat])
+    need_df = need_df.sort_values(by=[group_feat, time_feat])
     return need_df.groupby(group_feat).cumcount()
 
 
@@ -96,18 +96,30 @@ def group_sum(df, group_feat, avg_feat):
 def group_cumsum(df, group_feat, sum_feat, time_feat):
     need_df = df[[group_feat, sum_feat, time_feat]]
     need_df = need_df.sort_values(by=[group_feat, time_feat])
-    return need_df.groupby(group_feat).apply(lambda x: x[sum_feat].shift(1).cumsum()).reset_index(level=0, drop=True)
+    return need_df.groupby(group_feat)[sum_feat].cumsum().shift(1)
 
+
+# def get_group_most_rated_genre(df, group_feat, tag_feat, time_feat):
+#     data_list = []
+#     df = df[[group_feat, tag_feat, time_feat]]
+#     group_expanding = df.sort_values(by=time_feat).groupby(group_feat).expanding()
+#     for expanding in group_expanding:
+#         genre_list = expanding.shift(1)[tag_feat].str.split("|").dropna().to_list()
+#         counter = Counter(chain.from_iterable(genre_list)).most_common(1) if len(genre_list) > 0 else [[""]]
+#         data_list.append(counter[0][0])
+#     return data_list
 
 def get_group_most_rated_genre(df, group_feat, tag_feat, time_feat):
-    data_list = []
-    df = df[[group_feat, tag_feat, time_feat]]
-    group_expanding = df.sort_values(by=time_feat).groupby(group_feat).expanding()
-    for expanding in group_expanding:
-        genre_list = expanding.shift(1)[tag_feat].str.split("|").dropna().to_list()
-        counter = Counter(chain.from_iterable(genre_list)).most_common(1) if len(genre_list) > 0 else [[""]]
-        data_list.append(counter[0][0])
-    return data_list
+    need_df = df[[group_feat, tag_feat, time_feat]]
+    need_df = need_df.sort_values([group_feat, time_feat])
+    need_df["genres_list"] = need_df[tag_feat].fillna("").str.split("|").apply(lambda x: [i for i in x if i])
+    result = [None] * len(need_df)
+    for _, g in need_df.groupby(group_feat, group_keys=False):
+        cnt = Counter()
+        for idx, row in g.iterrows():
+            result[idx] = cnt.most_common(1)[0][0] if cnt else ""
+            cnt.update(row["genres_list"])
+    return result
 
 
 def get_group_highest_rated_genre(df, group_feat, tag_feat, rate_feat, time_feat):
